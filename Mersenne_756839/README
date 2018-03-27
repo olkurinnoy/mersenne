@@ -1,0 +1,25 @@
+Cover.pdf : Cover sheet and scanned submission forms
+
+KAT directory
+  Makefile : for building the PQCgenKAT_kem executable
+  PQCgenKAT_kem.c : NIST provided file
+  rng.c : NIST provided file
+  rng.h : NIST provided file
+  Mersenne_kem.c : symbolic link to Reference_Implementation/Mersenne_kem.c
+  api.h : symbolic link to Reference_Implementation/api.h
+  PQCkemKAT_32.req : result of PQCgenKAT_kem
+  PQCkemKAT_32.rsp : result of PQCgenKAT_kem (70M file omitted from shortened package)
+
+Optimized_Implementation directory
+  Mersenne_kem.c : Optimized C implementation
+  api.h          : API file
+
+Reference_Implementation directory
+  Mersenne_kem.c : Reference C implementation
+  api.h          : API file
+
+Supporting_Documentation:
+  Mersenne_specif.pdf : Specification document
+  Mersenne_paper.pdf  : Supporting scientific article
+  
+
