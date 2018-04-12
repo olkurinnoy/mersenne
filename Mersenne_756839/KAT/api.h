@@ -14,6 +14,8 @@
  #define CRYPTO_CIPHERTEXTBYTES (CRYPTO_BASIC_SECRETKEYBYTES+CRYPTO_CIPHERTEXTBYTES_EXTRA)
 #endif
 
+int crypto_kem_keypair_fromseed(unsigned char *pk,
+				unsigned char *sk, unsigned char *seed);
 
 int crypto_kem_keypair(unsigned char *pk,
 		       unsigned char *sk);

@@ -8,14 +8,20 @@ using namespace std;
 
 int main()
 {
-	ExpandableState state;
-	unsigned char *a, *B;
-	a = new unsigned char[10];
-	a[0] = a[3] = 1;
-	InitExpandableState(a,&state);
-	//cout<<random_mod(1000000, &state);
-	B = new unsigned char[n];
-	//gen_sparse_byte_arr(B, &state);
+	unsigned char pk[2*K], sk[h/8];
+	unsigned char seed[48];
+	unsigned char entropy_input[48];
+	for (int i=0; i<48; i++)
+        entropy_input[i] = i;
+    randombytes_init(entropy_input, NULL, 256);
+	randombytes(seed, 48);
+	randombytes(seed, 48);
 	
+	randombytes_init(seed, NULL, 256);
+	key_pair(pk, sk);
+	print_byte_arr(seed,"seed = ",48);
+	print_byte_arr(pk,"pk = ",2*K);
+	print_byte_arr(sk,"sk = ",h/8);
+
 	cin.get();
 }

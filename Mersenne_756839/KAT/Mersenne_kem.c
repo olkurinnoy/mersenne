@@ -122,6 +122,7 @@ int crypto_kem_keypair_fromseed(unsigned char *pk,
   mpz_inits(f,g,R,T,NULL);
   /* Import char tabs into GMP (least significant byte first) */
   mpz_import(R, CRYPTO_BASIC_SECRETKEYBYTES, -1, 1, 0, 0, pk);
+  
   /* For R : also do reduction modulo Mersenne prime */
   mpz_fdiv_q_2exp (f, R, Psize);
   mpz_fdiv_r_2exp (g, R, Psize);
@@ -148,7 +149,13 @@ int crypto_kem_keypair_fromseed(unsigned char *pk,
   /* Store R, T as public key */
   memset(pk, 0, 2*CRYPTO_BASIC_SECRETKEYBYTES);
   mpz_export(pk, &countp, -1, 1, 0, 0, R);
+
+  //gmp_printf("%ZX", R);
+
   mpz_export(pk+CRYPTO_BASIC_SECRETKEYBYTES, &countp, -1, 1, 0, 0, T);
+
+//  for ( int i=0; i<CRYPTO_PUBLICKEYBYTES; i++ )
+//      printf("%02X", pk[i]);
 
   mpz_clears(f,g,R,T,NULL);
 

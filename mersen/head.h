@@ -12,8 +12,16 @@ void GetExpandableOutput(unsigned char *output, unsigned int outputByteLen, Expa
 
 void get_P(mpz_t P);
 
+void print_byte_arr(unsigned char* arr, const char* desc, int len);
+
+
+
 int random_mod(int mod, ExpandableState *state);
 
 void gen_sparse_byte_arr(unsigned char* B, ExpandableState *state);
+
+void det_key_pair(unsigned char* pk, unsigned char* longsk, unsigned char* seed);
+
+void key_pair(unsigned char* pk, unsigned char* sk);
 
 #endif
