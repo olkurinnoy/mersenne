@@ -1,16 +1,18 @@
 GCC = g++
-LDFLAGS = -lgmp
+LDFLAGS = -lgmp -lgmpxx -lcrypto
 CFLAGS = -Wall -g
 
-# ****************************************************
-# Targets needed to bring the executable up to date
-
-main: main.o head.o
-	$(GCC) $(CFLAGS) -o main main.o head.o $(LDFLAGS)
-
-# The main.o target can be written more simply
+main: main.o head.o rng.o
+	$(GCC) $(CFLAGS) -o main main.o head.o rng.o $(LDFLAGS)
 
 main.o: main.cpp head.h
 	$(GCC) $(CFLAGS) -c main.cpp
 
-head.o: head.h
+head.o: head.cpp head.h rng.h
+	$(GCC) $(CFLAGS) -c head.cpp
+
+rng.o: rng.c head.h
+	$(GCC) $(CFLAGS) -c rng.c
+
+clean: 
+	$(RM) count *.o *~
