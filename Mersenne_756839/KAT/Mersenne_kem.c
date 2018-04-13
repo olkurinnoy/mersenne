@@ -256,6 +256,8 @@ void mersenne_kem_enc_seed(unsigned char *ct,
   /* Extract Mask in Second Part from C2 */
   mpz_export(error, &countp, -1, 1, 0, 0, C2);
 
+
+
   /* XOR a repetition encoding of inputseed with mask */
   pos=0;
   for(i=0;i<SECURITYLVL;i++) {
@@ -274,6 +276,10 @@ void mersenne_kem_enc_seed(unsigned char *ct,
       }
     }
   }
+
+
+//    for ( int i=CRYPTO_BASIC_SECRETKEYBYTES; i<CRYPTO_CIPHERTEXTBYTES; i++ )
+//      printf("%02X", ct[i]);
   
   mpz_clears(a,b1,b2,C1,C2,R,T,NULL);
 }

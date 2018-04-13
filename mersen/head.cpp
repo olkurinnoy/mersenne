@@ -140,5 +140,147 @@ void key_pair(unsigned char* pk, unsigned char* sk)
 		seed[i] = sk[i];
 	}
 	det_key_pair(pk, longsk, seed);
+}
 
+void det_kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk, unsigned char* seed)
+{
+	ExpandableState state;
+	unsigned char *Aa, *Ab1, *Ab2;
+	InitExpandableState(seed, &state);
+	GetExpandableOutput(ss, h/8, &state);
+	Aa = new unsigned char[K];
+	Ab1 = new unsigned char[K];
+	Ab2 = new unsigned char[K];
+	gen_sparse_byte_arr(Aa, &state);
+	gen_sparse_byte_arr(Ab1, &state);
+	gen_sparse_byte_arr(Ab2, &state);
+	mpz_t P, a, b1, b2, R, T, C1, C2;
+	mpz_init(P);
+	get_P(P);
+	mpz_init(a);
+	mpz_init(b1);
+	mpz_init(b2);
+	mpz_init(R);
+	mpz_init(T);
+	mpz_init(C1);
+	mpz_init(C2);
+	mpz_import(a, K, -1, 1, 0, 0, Aa);
+	mpz_import(b1, K, -1, 1, 0, 0, Ab1);
+	mpz_import(b2, K, -1, 1, 0, 0, Ab2);
+	mpz_import(R, K, -1, 1, 0, 0, pk);
+	mpz_import(T, K, -1, 1, 0, 0, pk + K);
+	mpz_mul(C1,a,R);
+	mpz_add(C1,C1,b1);
+	mpz_mod(C1,C1,P);
+	mpz_mul(C2,a,T);
+	mpz_add(C2,C2,b2);
+	mpz_mod(C2,C2,P);
+
+	size_t countp;
+	unsigned char temp_C1[K], temp_C2[K];
+	mpz_export(temp_C1, &countp, -1, 1, 0, 0, C1);
+	mpz_export(temp_C2, &countp, -1, 1, 0, 0, C2);
+	
+
+	unsigned char M[(h/8)*ro];
+	for (int i=0; i<h; i++)
+	{
+		if ((seed[i/8]>>(i%8))&1)
+		{
+			for (int j=(i*ro)/8;j<((i+1)*ro)/8;j++)
+			{
+				M[j] = 255;
+			}
+		}
+		else
+		{
+			for (int j=(i*ro)/8;j<((i+1)*ro)/8;j++)
+			{
+				M[j] = 0;
+			}
+		}
+	}
+
+	for (int i=0;i<(h/8)*ro;i++)
+	{
+		M[i] = M[i]^temp_C2[i];
+	}
+
+	std::copy(temp_C1, temp_C1 + K, ct);
+	std::copy(M, M + (h/8)*ro, ct + K);
+	mpz_clear(P);
+	mpz_clear(a);
+	mpz_clear(b1);
+	mpz_clear(b2);
+	mpz_clear(R);
+	mpz_clear(T);
+	mpz_clear(C1);
+	mpz_clear(C2);
+}
+
+void kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk)
+{
+	unsigned char seed[32];
+	randombytes(seed, h/8);
+	det_kem_encap(ct, ss, pk, seed);
+}
+
+void kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
+{
+	
+	unsigned char seed[h/8], pk[2*K], longsk[K];
+	for (int i=0; i<h/8; i++)
+	{
+		seed[i] = sk[i];
+	}	
+	det_key_pair(pk, longsk, seed);
+	mpz_t P, f, C1, C2_;
+	mpz_init(P);
+	get_P(P);
+	mpz_init(f);
+	mpz_init(C1);
+	mpz_init(C2_);
+	mpz_import(f, K, -1, 1, 0, 0, longsk);
+	mpz_import(C1, K, -1, 1, 0, 0, ct);
+	mpz_mul(C2_, f, C1);
+	mpz_mod(C2_, C2_, P);
+	
+	unsigned char M[(h/8)*ro], temp_C2_[K + (h/8)*ro];
+	size_t countp;
+	mpz_export(temp_C2_, &countp, -1, 1, 0, 0, C2_);
+
+	for (int i=0; i<(h/8)*ro; i++)
+	{
+		M[i] = temp_C2_[i]^ct[i + K];
+	}
+	
+	mpz_clear(P);
+	mpz_clear(f);
+	mpz_clear(C1);
+	mpz_clear(C2_);
+	
+	unsigned char S_[32];
+	for (int i=0; i<32; i++)
+	{
+		S_[i] = 0;
+	}
+	
+	int ham_w;
+	
+	for (int i=0; i<h; i++)
+	{
+		ham_w = 0;
+		for (int j=(i*ro)/8; j<((i+1)*ro)/8; j++)
+		{
+			ham_w = ham_w + __builtin_popcount(M[j]);
+		}
+		if (ham_w>ro/2)
+		{
+			S_[i/8] = S_[i/8]^(1 << (i%8));
+		}
+	}
+	unsigned char ct_new[K + (h/8)*ro];
+	det_kem_encap(ct_new, ss, pk, S_);
+	print_byte_arr(ct_new, "ct_new = ", K + (h/8)*ro);
+	
 }

@@ -20,6 +20,11 @@ int crypto_kem_keypair_fromseed(unsigned char *pk,
 int crypto_kem_keypair(unsigned char *pk,
 		       unsigned char *sk);
 
+void mersenne_kem_enc_seed(unsigned char *ct,
+			  unsigned char *ss,
+			  const unsigned char *pk,
+			  const unsigned char *inputseed);
+
 int crypto_kem_enc(unsigned char *ct,
 		   unsigned char *ss,
 		   const unsigned char *pk);
