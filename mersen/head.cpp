@@ -34,6 +34,24 @@ void print_byte_arr(unsigned char* arr, const char* desc, int len)
 	printf("\n");
 }
 
+void fprint_byte_arr(FILE *fp, unsigned char *arr, const char* desc, int len)
+{
+	fprintf(fp, "%s", desc);
+
+	for (int i=0; i<len; i++ )
+		fprintf(fp, "%02X", arr[i]);
+
+	fprintf(fp, "\n");
+}
+
+void init_arr(unsigned char *arr, int len)
+{
+	for (int i=0; i<len; i++)
+	{
+		arr[i] = 0;
+	}
+}
+
 int random_mod(int mod, ExpandableState *state)
 {
   	unsigned char random_bytes[3];
@@ -112,12 +130,18 @@ void det_key_pair(unsigned char* pk, unsigned char* longsk, unsigned char* seed)
 	mpz_mul(T,f,R);
 	mpz_add(T,T,g);
 	mpz_mod(T,T,P);
+
 	unsigned char temp_R[K], temp_T[K];
 	size_t countp;
+	init_arr(pk, 2*K);
+	init_arr(temp_R, K);
+	init_arr(temp_T, K);
 	mpz_export(temp_R, &countp, -1, 1, 0, 0, R);
 	mpz_export(temp_T, &countp, -1, 1, 0, 0, T);
 	std::copy(temp_R, temp_R + K, pk);
 	std::copy(temp_T, temp_T + K, pk + K);
+
+
 	for (int i=0; i<K; i++)
 	{
 		longsk[i] = Af[i];
@@ -178,9 +202,10 @@ void det_kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk, unsi
 
 	size_t countp;
 	unsigned char temp_C1[K], temp_C2[K];
+	init_arr(temp_C1, K);
+	init_arr(temp_C2, (h/8)*ro);
 	mpz_export(temp_C1, &countp, -1, 1, 0, 0, C1);
 	mpz_export(temp_C2, &countp, -1, 1, 0, 0, C2);
-	
 
 	unsigned char M[(h/8)*ro];
 	for (int i=0; i<h; i++)
@@ -205,9 +230,10 @@ void det_kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk, unsi
 	{
 		M[i] = M[i]^temp_C2[i];
 	}
-
+	init_arr(ct, K + (h/8)*ro);
 	std::copy(temp_C1, temp_C1 + K, ct);
 	std::copy(M, M + (h/8)*ro, ct + K);
+
 	mpz_clear(P);
 	mpz_clear(a);
 	mpz_clear(b1);
@@ -225,14 +251,16 @@ void kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk)
 	det_kem_encap(ct, ss, pk, seed);
 }
 
-void kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
+int kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
 {
 	
 	unsigned char seed[h/8], pk[2*K], longsk[K];
 	for (int i=0; i<h/8; i++)
 	{
 		seed[i] = sk[i];
-	}	
+	}
+	init_arr(pk, 2*K);
+	init_arr(longsk, K);
 	det_key_pair(pk, longsk, seed);
 	mpz_t P, f, C1, C2_;
 	mpz_init(P);
@@ -246,6 +274,7 @@ void kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
 	mpz_mod(C2_, C2_, P);
 	
 	unsigned char M[(h/8)*ro], temp_C2_[K + (h/8)*ro];
+	init_arr(temp_C2_, K + (h/8)*ro);
 	size_t countp;
 	mpz_export(temp_C2_, &countp, -1, 1, 0, 0, C2_);
 
@@ -253,7 +282,7 @@ void kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
 	{
 		M[i] = temp_C2_[i]^ct[i + K];
 	}
-	
+
 	mpz_clear(P);
 	mpz_clear(f);
 	mpz_clear(C1);
@@ -279,8 +308,26 @@ void kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
 			S_[i/8] = S_[i/8]^(1 << (i%8));
 		}
 	}
-	unsigned char ct_new[K + (h/8)*ro];
-	det_kem_encap(ct_new, ss, pk, S_);
-	print_byte_arr(ct_new, "ct_new = ", K + (h/8)*ro);
 	
+	unsigned char ct_new[K + (h/8)*ro];
+	init_arr(ct_new, K + (h/8)*ro);
+
+
+	det_kem_encap(ct_new, ss, pk, S_);
+	int check = 1;
+	for (int i=0; i<K + (h/8)*ro; i++)
+	{
+		if (ct[i]!=ct_new[i])
+		{
+			check = -1;
+		}
+	}
+	if (check==-1)
+	{
+		for (int i=0; i<h/8; i++)
+		{
+			ss[i] = 0;
+		}
+	}
+	return check;
 }

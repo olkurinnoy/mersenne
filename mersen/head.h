@@ -14,6 +14,10 @@ void get_P(mpz_t P);
 
 void print_byte_arr(unsigned char* arr, const char* desc, int len);
 
+void fprint_byte_arr(FILE *fp, unsigned char *arr, const char* desc, int len);
+
+void init_arr(unsigned char *arr, int len);
+
 int random_mod(int mod, ExpandableState *state);
 
 void gen_sparse_byte_arr(unsigned char* B, ExpandableState *state);
@@ -26,6 +30,6 @@ void det_kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk, unsi
 
 void kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk);
 
-void kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk);
+int kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk);
 
 #endif
