@@ -25,43 +25,6 @@ void	fprintBstr(FILE *fp, char *S, unsigned char *A, unsigned long long L);
 int
 main()
 {
-    unsigned char pk[CRYPTO_PUBLICKEYBYTES], longsk[CRYPTO_BASIC_SECRETKEYBYTES], sk[CRYPTO_SECRETKEYBYTES], ct[CRYPTO_CIPHERTEXTBYTES], ss[CRYPTO_BYTES], ss1[CRYPTO_BYTES];
-    unsigned char seed[48];
-    //unsigned char *seed;
-    unsigned char entropy_input[48];
-    for (int i=0; i<48; i++)
-        entropy_input[i] = i;
-    randombytes_init(entropy_input, NULL, 256);
-    randombytes(seed, 48);
-    randombytes_init(seed, NULL, 256);
-
-    //for (int i=0; i<48; i++ )
-    //    printf("%02X", seed[i]);
-    //printf("\n");
-    //crypto_kem_keypair_fromseed(pk, longsk, seed);
-    
-    //for (int i=0; i<CRYPTO_BASIC_SECRETKEYBYTES; i++ )
-    //    printf("%02X", longsk[i]);
-    //for (int i=0; i<CRYPTO_BASIC_SECRETKEYBYTES; i++ )
-    //    if (longsk[i]!=0) printf("%d\n", longsk[i]);
-
-    //for ( int i=0; i<CRYPTO_PUBLICKEYBYTES; i++ )
-    //    printf("%02X", pk[i]);
-
-   /* crypto_kem_keypair(pk, sk);
-    for ( int i=0; i<CRYPTO_PUBLICKEYBYTES; i++ )
-        printf("%02X", pk[i]);
-    printf("\n");
-    for ( int i=0; i<CRYPTO_SECRETKEYBYTES; i++ )
-        printf("%02X", sk[i]);
-    getchar(); 
-    */
-
-    crypto_kem_keypair(pk, sk);
-    crypto_kem_enc(ct,ss,pk);
-    getchar();
-
-    /*
     char                fn_req[32], fn_rsp[32];
     FILE                *fp_req, *fp_rsp;
     unsigned char       seed[48];
@@ -157,7 +120,7 @@ main()
     fclose(fp_rsp);
 
     return KAT_SUCCESS;
-    */
+    
 }
 
 

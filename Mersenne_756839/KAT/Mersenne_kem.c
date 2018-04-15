@@ -146,15 +146,15 @@ int crypto_kem_keypair_fromseed(unsigned char *pk,
   mpz_fdiv_r_2exp (g, T, Psize);
   mpz_add(T, f, g);
 
+
   /* Store R, T as public key */
   memset(pk, 0, 2*CRYPTO_BASIC_SECRETKEYBYTES);
   mpz_export(pk, &countp, -1, 1, 0, 0, R);
 
-  //gmp_printf("%ZX", R);
 
   mpz_export(pk+CRYPTO_BASIC_SECRETKEYBYTES, &countp, -1, 1, 0, 0, T);
 
-//  for ( int i=0; i<CRYPTO_PUBLICKEYBYTES; i++ )
+//  for ( int i=0; i<2*CRYPTO_BASIC_SECRETKEYBYTES; i++ )
 //      printf("%02X", pk[i]);
 
   mpz_clears(f,g,R,T,NULL);
@@ -249,9 +249,12 @@ void mersenne_kem_enc_seed(unsigned char *ct,
   mpz_fdiv_r_2exp (b2, C2, Psize);
   mpz_add(C2, b1, b2);
 
+  //gmp_printf("%ZX", C1);
+
   /* Export C1 as first part of ciphertext  */
   memset(ct,0,CRYPTO_CIPHERTEXTBYTES);
   mpz_export(ct, &countp, -1, 1, 0, 0, C1);
+
 
   /* Extract Mask in Second Part from C2 */
   mpz_export(error, &countp, -1, 1, 0, 0, C2);
@@ -275,12 +278,19 @@ void mersenne_kem_enc_seed(unsigned char *ct,
 	pos++;
       }
     }
+
   }
 
 
-//    for ( int i=CRYPTO_BASIC_SECRETKEYBYTES; i<CRYPTO_CIPHERTEXTBYTES; i++ )
-//      printf("%02X", ct[i]);
-  
+//for (int i=0; i<32; i++)
+//  printf("%02X", inputseed[i]);
+//printf("\n");
+ //   for ( int i=CRYPTO_BASIC_SECRETKEYBYTES; i<CRYPTO_CIPHERTEXTBYTES; i++ )
+ //     printf("%02X", ct[i]);
+ // for ( int i=0; i<CRYPTO_BASIC_SECRETKEYBYTES; i++ )
+ //     printf("%02X", ct[i]);
+
+
   mpz_clears(a,b1,b2,C1,C2,R,T,NULL);
 }
 
@@ -330,7 +340,9 @@ int crypto_kem_dec(unsigned char *ss,
   mpz_inits(tmp,f,C1,C2bis,NULL);
   mpz_import(f, CRYPTO_BASIC_SECRETKEYBYTES, -1, 1, 0, 0, basic_sk);
   mpz_import(C1, CRYPTO_BASIC_SECRETKEYBYTES, -1, 1, 0, 0, ct);
-
+  //gmp_printf("%ZX", C1);
+  //  for ( int i=0; i<CRYPTO_BASIC_SECRETKEYBYTES; i++ )
+  //      printf("%02X", ct[i]);
   /* Compute secret key Times first part of ciphertext modulo Mersenne prime */
   mpz_mul(C2bis, f, C1);
   /* Reduction of C2bis modulo Mersenne prime (tmp and f used as tmp values) */
@@ -341,6 +353,7 @@ int crypto_kem_dec(unsigned char *ss,
   mpz_fdiv_r_2exp (f, C2bis, Psize);
   mpz_add(C2bis, tmp, f);
 
+  //gmp_printf("%ZX", C2bis);
   /* Extract Mask in Second Part from C2bis */
   mpz_export(ct2, &countp, -1, 1, 0, 0, C2bis);
   
@@ -348,6 +361,9 @@ int crypto_kem_dec(unsigned char *ss,
   for(i=0;i<CRYPTO_CIPHERTEXTBYTES_EXTRA;i++) {
     ct2[i]^=ct[i+CRYPTO_BASIC_SECRETKEYBYTES];
   }
+
+  //for ( int i=0; i<CRYPTO_CIPHERTEXTBYTES_EXTRA; i++ )
+  //    printf("%02X", ct2[i]);
 
   /* Decode the repetition code bit by bit to obtain kemseed */
   pos=0;
@@ -359,6 +375,9 @@ int crypto_kem_dec(unsigned char *ss,
     }
     if (total_weight>4*NbBytesEncodeCpy) kemseed[i/8]^=(1<<(i%8));
   }
+
+  //for ( int i=0; i<32; i++ )
+  //    printf("%02X", kemseed[i]);
     
   mpz_clears(tmp,f,C1,C2bis,NULL);
 
@@ -367,6 +386,10 @@ int crypto_kem_dec(unsigned char *ss,
 
   /* Compare the results to check that they are fully identical */
   retcode=0;
+
+for ( int i=0; i<CRYPTO_CIPHERTEXTBYTES; i++ )
+      printf("%02X", ct[i]);
+
   for(i=0;i<CRYPTO_CIPHERTEXTBYTES;i++) {
     if (ct[i]!=ct2[i]) {
       retcode=-1;
