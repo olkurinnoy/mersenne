@@ -32,4 +32,10 @@ void kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk);
 
 int kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk);
 
+void results(FILE *fp, unsigned char* seed);
+
+void create_req(const char* name, int num, int seed_size);
+
+void create_resp(const char* resp, const char* req, int num, int seed_size);
+
 #endif

@@ -18,7 +18,7 @@ void get_xof_state(unsigned char *output, unsigned int outputByteLen, xof_state 
   seedexpander(state, output, outputByteLen);
 }
 
-void get_P(mpz_t P)
+void get_mers_numb(mpz_t P)
 {
 	mpz_ui_pow_ui(P,2,n);
 	mpz_sub_ui(P,P,1);
@@ -122,7 +122,7 @@ void det_key_pair(unsigned char* pk, unsigned char* longsk, unsigned char* seed)
 	mpz_init(R);
 	mpz_init(P);
 	mpz_init(T);
-	get_P(P);
+	get_mers_numb(P);
 	mpz_import(f, K, -1, 1, 0, 0, Af);
 	mpz_import(g, K, -1, 1, 0, 0, Ag);
 	mpz_import(R, K, -1, 1, 0, 0, AR);
@@ -180,7 +180,7 @@ void det_kem_encap(unsigned char* ct, unsigned char* ss, unsigned char* pk, unsi
 	gen_sparse_byte_arr(Ab2, &state);
 	mpz_t P, a, b1, b2, R, T, C1, C2;
 	mpz_init(P);
-	get_P(P);
+	get_mers_numb(P);
 	mpz_init(a);
 	mpz_init(b1);
 	mpz_init(b2);
@@ -264,7 +264,7 @@ int kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
 	det_key_pair(pk, longsk, seed);
 	mpz_t P, f, C1, C2_;
 	mpz_init(P);
-	get_P(P);
+	get_mers_numb(P);
 	mpz_init(f);
 	mpz_init(C1);
 	mpz_init(C2_);
@@ -330,4 +330,67 @@ int kem_decap(unsigned char* ss, unsigned char* ct, unsigned char* sk)
 		}
 	}
 	return check;
+}
+
+void results(FILE *fp, unsigned char* seed, int seed_size)
+{
+	unsigned char pk[2*K], sk[h/8], ct[K + (h/8)*ro], ss[h/8], ss1[h/8];
+	int status;
+	randombytes_init(seed, NULL, 256);
+	fprint_byte_arr(fp, seed,"seed = ",seed_size);
+	key_pair(pk, sk);
+	fprint_byte_arr(fp, pk,"pk = ",2*K);
+	fprint_byte_arr(fp, sk,"sk = ",h/8);
+	kem_encap(ct, ss, pk);
+	fprint_byte_arr(fp, ct, "ct = ",K + (h/8)*ro);
+	fprint_byte_arr(fp, ss, "ss  = ", h/8);
+	status = kem_decap(ss1, ct, sk);
+	//fprintf(fp, "decap status = %d\n", status);
+	//fprint_byte_arr(fp, ss1, "ss1 = ", h/8);
+}
+
+void create_req(const char* name, int num, int seed_size)
+{
+	FILE *fp;
+	fp = fopen(name, "w");
+
+	
+	unsigned char seed[seed_size];
+	unsigned char entropy_input[seed_size];
+	for (int i=0; i<seed_size; i++)
+        entropy_input[i] = i;
+    randombytes_init(entropy_input, NULL, 256);
+	for (int i=0; i<num; i++)
+	{
+		randombytes(seed, seed_size);
+		fprintf(fp, "No = %d\n", i);	
+		fprint_byte_arr(fp, seed, "seed = ", seed_size);
+	}
+	fclose(fp);
+}
+	
+void get_byte_arr_from_hex(unsigned char *seed, char *hex, int seed_size)
+{	
+	for (int i = 0; i < seed_size; i++) {
+        sscanf(hex + 2*i + 7, "%02x", &seed[i]);
+    }
+}
+
+void create_resp(const char* resp, const char* req, int num, int seed_size)
+{
+	FILE *fresp, *freq;
+	freq = fopen(req, "r");
+	fresp = fopen(resp, "w");
+	char buffer1[10], buffer2[seed_size*2 + 10];
+	unsigned char seed[seed_size];
+	for (int i=0; i<num; i++)
+	{
+		fgets(buffer1, 10, freq);
+		fgets(buffer2, seed_size*2 + 10, freq);
+		get_byte_arr_from_hex(seed, buffer2, seed_size);
+		fprintf(fresp, "%s", buffer1);
+		results(fresp, seed, seed_size);
+	}
+	fclose(freq);
+	fclose(fresp);
 }
