@@ -107,7 +107,7 @@ def E(M, Key):
 
 def Hash(Mess):
     last_block = Mess.bit_length() % 64
-    last_block = last_block + (8 - last_block % 8)
+    last_block = (last_block + (8 - last_block % 8)) % 64
     Mess = (Mess << 1) | 1
     last_block = last_block + 1
     Mess = Mess << (64 - last_block)
