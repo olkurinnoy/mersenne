@@ -6,7 +6,7 @@
 
 import numpy as np
 import random
-
+import time
 
 # In[2]:
 
@@ -220,7 +220,10 @@ def make_sign_files(req_file):
     M = read_mess(req_file)
     x = gen_secret_key(p)
     y = gen_public_key(a, x, p)
-    H, Sign, U, Z, G = gen_sign(M, a, x, p, q)
+    start = time.time()
+    H, Sign, U, Z, G = gen_sign(M, a, x, p, q)	
+    end = time.time()
+    print("Execution time of sign generation: ", end - start)    
     resp_file = req_file + ".sig"
     f = open(resp_file, "w+")
     if (not f):
@@ -272,10 +275,13 @@ def make_check_file(req_file, req_file_add):
     Z = int(data[3][3:-3], 16)
     G = int(data[4][3:-3], 16)
     f.close()
+    start = time.time()
     if (check_sign(H, Sign, a, y, p, q)):
         print("Підпис вірний")
     else:
         print("Підпис невірний")
+    end = time.time()
+    print("Execution time of sign checking: ", end - start) 
 
 
 import argparse
